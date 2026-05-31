@@ -1,30 +1,25 @@
 # Discord Backup Source (Reconstructed)
 
-This project is a reconstructed source tree from `DiscordBackup.exe` (PyInstaller bundle built on Python 3.13).
+This repository contains a reconstructed Python source tree derived from a bundled `DiscordBackup.exe` build.
+It is organized as a normal project so missing behavior can be finished incrementally.
 
-## Project status
+## Current status
 
-- package/module layout has been restored
-- CLI and TUI entry flow is restored
-- several behavior-heavy internals remain partial/stubbed and need manual reconstruction
+- package layout is restored
+- CLI/TUI entry flow is wired
+- configuration and model layers are present
+- some service-heavy internals still need deeper parity work
 
-## Reconstruction inputs
+## Project layout
 
-- extracted bytecode artifacts
-- symbol/constants analysis from `*_dis.txt` files
-- import graph and call-site reconstruction
-
-## Layout
-
-- `main.py`: entry point (`TUI` when run without args, `CLI` when args exist)
+- `main.py`: entry point
+- `config.yml`: runtime config
 - `discord_backup/` package:
   - `cli.py`: command routing
-  - `tui.py`: interactive terminal UI
-  - `config.py`: config loader (`config.yml`)
-  - `models.py`: dataclasses for backup/restore objects
-  - `backup.py`, `restore.py`: partially reconstructed service logic
-  - `token_discovery.py`: partial token discovery logic
-  - `http_client.py`, `identity.py`, `results.py`, `utils.py`, etc.
+  - `tui.py`: interactive terminal frontend
+  - `backup.py` / `restore.py`: backup and restore paths (partially reconstructed)
+  - `token_discovery.py`: token discovery logic (partially reconstructed)
+  - `config.py`, `models.py`, `http_client.py`, `identity.py`, `results.py`, `utils.py`
 
 ## Run
 
@@ -37,10 +32,9 @@ python main.py
 
 ## Known gaps
 
-- backup/restore service internals are not complete in all paths
-- some token discovery and loading/progress behaviors are placeholders
-- decompiler output references are retained for manual verification and reimplementation
+- full backup/restore parity requires additional implementation and validation
+- some runtime flows still use placeholder behavior
 
-## Goal of this repository
+## Repository goal
 
-Preserve the recovered source in a maintainable structure so missing paths can be completed incrementally with tests and trace validation.
+Keep a clean, source-first baseline that can be audited, tested, and completed without binary-only tooling.

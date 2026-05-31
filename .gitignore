@@ -12,6 +12,7 @@ tmp/
 out/
 build/
 dist/
+*_dis.txt
 
 # OS/editor noise
 Thumbs.db
