@@ -36,10 +36,12 @@ class DiscordHTTPClient:
         timeout: float = 30.0,
         concurrency: int = 6,
         max_retries: int = 4,
+        resolve_build_number: bool = True,
     ) -> "DiscordHTTPClient":
         identity = identity or DiscordBrowserIdentity()
         client = httpx.AsyncClient(base_url=API_BASE, timeout=timeout, http2=True)
-        await identity.ensure_build_number(client)
+        if resolve_build_number:
+            await identity.ensure_build_number(client)
         return cls(client, identity, concurrency=concurrency, max_retries=max_retries)
 
     async def aclose(self) -> None:

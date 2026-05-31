@@ -6,7 +6,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 
 try:
     from prompt_toolkit.shortcuts.dialogs import (
@@ -51,16 +51,20 @@ def _strip_ansi(text: str) -> str:
     return ANSI_RE.sub("", text)
 
 
-async def _async_discover_tokens() -> list[DiscoveredToken]:
-    http = await DiscordHTTPClient.create()
+async def _async_discover_tokens(
+    status_callback: Callable[[str], None] | None = None,
+) -> list[DiscoveredToken]:
+    http = await DiscordHTTPClient.create(resolve_build_number=False)
     try:
+        if status_callback:
+            return await discover_tokens(http, progress=status_callback)
         return await discover_tokens(http)
     finally:
         await http.aclose()
 
 
 async def _async_run_backup(token: str, config: AppConfig, console: Console) -> tuple[BackupResult, Path]:
-    http = await DiscordHTTPClient.create()
+    http = await DiscordHTTPClient.create(resolve_build_number=False)
     try:
         service = BackupService(http=http, token=token, config=config, console=console)
         result = await service.run()
@@ -78,7 +82,7 @@ async def _async_run_restore(
     allow_version_mismatch: bool,
     console: Console,
 ) -> tuple[str, str, bool, float]:
-    http = await DiscordHTTPClient.create()
+    http = await DiscordHTTPClient.create(resolve_build_number=False)
     try:
         service = RestoreService(
             http=http,
@@ -140,7 +144,7 @@ def _show_error(title: str, error: Exception, logs: str | None = None) -> None:
 def _discover_tokens_with_loading() -> list[DiscoveredToken]:
     def worker(handle: ProgressHandle) -> list[DiscoveredToken]:
         handle.update("Scanning local storage for Discord tokens...")
-        tokens = asyncio.run(_async_discover_tokens())
+        tokens = asyncio.run(_async_discover_tokens(handle.update))
         handle.update(f"Found {len(tokens)} token(s)")
         time.sleep(0.2)
         return tokens

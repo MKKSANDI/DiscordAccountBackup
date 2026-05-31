@@ -47,7 +47,7 @@ async def _select_token(http: DiscordHTTPClient, console: Console) -> Optional[D
 
 
 async def _run_backup(token: str | None, config: AppConfig, console: Console, scan: bool) -> BackupResult | None:
-    http = await DiscordHTTPClient.create()
+    http = await DiscordHTTPClient.create(resolve_build_number=False)
     try:
         token_value = token
         if scan or not token_value:
@@ -104,7 +104,7 @@ async def _run_restore(
         console.error(f"Backup file not found: {backup_path}")
         return
     data = json.loads(backup_path.read_text(encoding="utf-8"))
-    http = await DiscordHTTPClient.create()
+    http = await DiscordHTTPClient.create(resolve_build_number=False)
     try:
         service = RestoreService(http=http, token=token, bot_token=bot_token, backup=data, console=console)
         summary = await service.run(
@@ -165,7 +165,7 @@ def auto_backup(
     else:
         console.warn(f"Working directory not found: {working_dir}")
     async def runner() -> None:
-        http = await DiscordHTTPClient.create()
+        http = await DiscordHTTPClient.create(resolve_build_number=False)
         try:
             tokens = await discover_tokens(http)
             token_value = None
@@ -194,7 +194,7 @@ def startup_add(
     config, console = _load_config_and_console()
 
     async def runner() -> None:
-        http = await DiscordHTTPClient.create()
+        http = await DiscordHTTPClient.create(resolve_build_number=False)
         try:
             selection: DiscoveredToken | None = None
             if scan:
@@ -234,7 +234,7 @@ def tokens() -> None:
     _, console = _load_config_and_console()
 
     async def runner() -> None:
-        http = await DiscordHTTPClient.create()
+        http = await DiscordHTTPClient.create(resolve_build_number=False)
         try:
             tokens = await discover_tokens(http)
             if not tokens:
