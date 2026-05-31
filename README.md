@@ -15,7 +15,7 @@ run.bat
 
 `run.bat` will:
 1. Request administrator privileges.
-2. Detect `.venv\Scripts\python.exe` or fall back to `python`.
+2. Create `.venv` automatically if it does not exist.
 3. Install dependencies from `requirements.txt`.
 4. Launch `main.py`.
 5. Keep the window open if launch fails, so errors are visible.

@@ -26,13 +26,15 @@ def _log_crash(exc: BaseException) -> Path:
 
 def main() -> None:
     ensure_runtime_dependencies(verbose=True)
-    if len(sys.argv) == 1:
+    filtered_args = [arg for arg in sys.argv[1:] if arg != "--elevated"]
+    if not filtered_args:
         from discord_backup.tui import run_tui
 
         run_tui()
     else:
         from discord_backup.cli import run as run_cli
 
+        sys.argv = [sys.argv[0], *filtered_args]
         run_cli()
 
 

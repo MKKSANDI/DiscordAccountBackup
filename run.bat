@@ -14,14 +14,6 @@ if /i "%~1"=="--elevated" (
 
 net session >nul 2>&1
 if errorlevel 1 (
-    if "%ELEVATED_FLAG%"=="1" (
-        echo Failed to start with administrator privileges.
-        echo Accept the UAC prompt, or run Command Prompt as Administrator and retry.
-        echo Launcher log: "%LAUNCHER_LOG%"
-        >>"%LAUNCHER_LOG%" echo [%date% %time%] admin check failed after elevation.
-        pause
-        exit /b 1
-    )
     echo Requesting administrator privileges...
     powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/c """"%~f0"""" --elevated %*' -Verb RunAs"
     if errorlevel 1 (
@@ -34,29 +26,49 @@ if errorlevel 1 (
     exit /b 0
 )
 
+if "%ELEVATED_FLAG%"=="1" (
+    if /i "%~1"=="--elevated" shift
+)
+
 if exist ".venv\Scripts\python.exe" (
     set "PYTHON=.venv\Scripts\python.exe"
 ) else (
     set "PYTHON="
+    set "BOOTSTRAP_PYTHON="
 )
 
 if not defined PYTHON (
     python --version >nul 2>&1
-    if not errorlevel 1 set "PYTHON=python"
+    if not errorlevel 1 set "BOOTSTRAP_PYTHON=python"
 )
 
-if not defined PYTHON (
+if not defined BOOTSTRAP_PYTHON if not defined PYTHON (
     py -3 --version >nul 2>&1
-    if not errorlevel 1 set "PYTHON=py -3"
+    if not errorlevel 1 set "BOOTSTRAP_PYTHON=py -3"
 )
 
-if not defined PYTHON (
+if not defined PYTHON if not defined BOOTSTRAP_PYTHON (
     echo Python was not found. Install Python 3.10+ and re-run.
     echo Launcher log: "%LAUNCHER_LOG%"
     >>"%LAUNCHER_LOG%" echo [%date% %time%] no python runtime found.
     pause
     exit /b 1
 )
+
+if not defined PYTHON (
+    echo Creating local virtual environment...
+    %BOOTSTRAP_PYTHON% -m venv .venv
+    if errorlevel 1 (
+        echo Failed to create .venv.
+        echo Launcher log: "%LAUNCHER_LOG%"
+        >>"%LAUNCHER_LOG%" echo [%date% %time%] failed to create .venv.
+        pause
+        exit /b 1
+    )
+    set "PYTHON=.venv\Scripts\python.exe"
+)
+
+%PYTHON% -m pip install --upgrade pip >nul 2>&1
 
 %PYTHON% -m pip install -r requirements.txt
 if errorlevel 1 (
@@ -67,7 +79,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-%PYTHON% main.py %*
+set "APP_ARGS=%*"
+set "APP_ARGS=%APP_ARGS: --elevated=%"
+set "APP_ARGS=%APP_ARGS:--elevated=%"
+
+if defined APP_ARGS (
+    %PYTHON% main.py %APP_ARGS%
+) else (
+    %PYTHON% main.py
+)
 set "APP_EXIT=%ERRORLEVEL%"
 if not "%APP_EXIT%"=="0" (
     echo.
